@@ -1,4 +1,6 @@
-// Background SW: ensures Offscreen WS document exists, heartbeat via alarms. No sockets here.
+// Background SW: owns ALL chrome.* APIs. Offscreen owns only the WebSocket and relays here.
+import { handleCommand } from "./commands.js";
+
 async function ensureOffscreen(): Promise<void> {
   try {
     const has = await (chrome.offscreen as any).hasDocument?.();
@@ -28,6 +30,18 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.alarms.onAlarm.addListener((a) => {
   if (a.name === "oc-heartbeat") {
     void ensureOffscreen();
-    chrome.runtime.sendMessage({ type: "oc-ping" }).catch(() => {});
   }
+});
+
+// Offscreen relays daemon commands here; SW executes with full chrome.* access.
+chrome.runtime.onMessage.addListener((m: any, _sender: any, sendResponse: (r: any) => void) => {
+  if (m?.type === "oc-cmd" && m.msg?.type === "command") {
+    void handleCommand(m.msg).then(sendResponse);
+    return true; // async response
+  }
+  if (m?.type === "oc-ping") {
+    sendResponse({ ok: true });
+    return false;
+  }
+  return false;
 });
