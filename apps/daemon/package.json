@@ -1,0 +1,11 @@
+{
+  "name": "@openchrome/daemon",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "openchrome-daemon": "./src/index.ts"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}

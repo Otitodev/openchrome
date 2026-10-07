@@ -1,0 +1,15 @@
+<!doctype html><html><body style="width:320px;font-family:sans-serif">
+<h1>OpenChrome</h1>
+<p id="status">Disconnected</p>
+<input id="token" placeholder="Paste oc_... token from openchrome init" style="width:100%" />
+<button id="pair">Pair</button>
+<button id="toggle">Enable/Disable</button>
+<h3>Allowed Sites</h3>
+<ul id="rules"></ul>
+<input id="pattern" placeholder="e.g. myapp.com or *.myapp.com" style="width:60%" />
+<select id="policy"><option value="allow">Allow</option><option value="ask">Ask</option><option value="deny">Deny</option></select>
+<button id="addRule">Add</button>
+<h3>Pending approvals</h3>
+<ul id="pending"></ul>
+<script src="popup.js"></script>
+</body></html>
