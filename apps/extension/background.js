@@ -745,6 +745,10 @@ chrome.alarms.onAlarm.addListener((a) => {
   }
 });
 chrome.runtime.onMessage.addListener((m, _sender, sendResponse) => {
+  if (m?.type === "oc-get-token") {
+    void chrome.storage.local.get("ocToken").then((s) => sendResponse({ token: s.ocToken ?? null }));
+    return true;
+  }
   if (m?.type === "oc-cmd" && m.msg?.type === "command") {
     void handleCommand(m.msg).then(sendResponse);
     return true;

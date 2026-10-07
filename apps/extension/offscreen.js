@@ -2,8 +2,19 @@
 var PORT = Number(globalThis.OPENCHROME_PORT ?? 18721);
 var ws = null;
 var backoff = 250;
+var cachedToken = null;
 function send(obj) {
   ws?.send(JSON.stringify(obj));
+}
+async function getToken() {
+  if (cachedToken) return cachedToken;
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "oc-get-token" });
+    if (res?.token) cachedToken = res.token;
+    return cachedToken;
+  } catch {
+    return null;
+  }
 }
 async function onDaemonCommand(msg) {
   try {
@@ -14,7 +25,7 @@ async function onDaemonCommand(msg) {
   }
 }
 async function connect() {
-  const { ocToken } = await chrome.storage.local.get("ocToken");
+  const ocToken = await getToken();
   if (!ocToken) {
     setTimeout(connect, 2e3);
     return;

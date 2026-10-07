@@ -35,6 +35,10 @@ chrome.alarms.onAlarm.addListener((a) => {
 
 // Offscreen relays daemon commands here; SW executes with full chrome.* access.
 chrome.runtime.onMessage.addListener((m: any, _sender: any, sendResponse: (r: any) => void) => {
+  if (m?.type === "oc-get-token") {
+    void chrome.storage.local.get("ocToken").then((s: any) => sendResponse({ token: s.ocToken ?? null }));
+    return true; // async response
+  }
   if (m?.type === "oc-cmd" && m.msg?.type === "command") {
     void handleCommand(m.msg).then(sendResponse);
     return true; // async response
