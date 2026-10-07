@@ -1,11 +1,23 @@
-// Offscreen Document: owns ONLY the WebSocket. No chrome.tabs/debugger here
-// (unavailable in offscreen context). Relays daemon commands to the SW via runtime messaging.
+// Offscreen Document: owns ONLY the WebSocket. No chrome.tabs/debugger/storage here
+// (unavailable in offscreen context). Token comes from the SW via messaging.
 const PORT = Number((globalThis as any).OPENCHROME_PORT ?? 18721);
 let ws: WebSocket | null = null;
 let backoff = 250;
+let cachedToken: string | null = null;
 
 function send(obj: unknown): void {
   ws?.send(JSON.stringify(obj));
+}
+
+async function getToken(): Promise<string | null> {
+  if (cachedToken) return cachedToken;
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "oc-get-token" });
+    if (res?.token) cachedToken = res.token;
+    return cachedToken;
+  } catch {
+    return null;
+  }
 }
 
 async function onDaemonCommand(msg: any): Promise<void> {
@@ -18,7 +30,7 @@ async function onDaemonCommand(msg: any): Promise<void> {
 }
 
 async function connect(): Promise<void> {
-  const { ocToken } = await chrome.storage.local.get("ocToken");
+  const ocToken = await getToken();
   if (!ocToken) {
     setTimeout(connect, 2000);
     return;
