@@ -9,9 +9,11 @@
     "test": "node --test",
     "daemon": "node apps/daemon/dist/index.js",
     "mcp": "node apps/mcp-server/dist/index.js",
-    "test-app": "node examples/test-app/serve.mjs"
+    "test-app": "node examples/test-app/serve.mjs",
+    "pack:extension": "node scripts/pack-extension.mjs"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/chrome": "^0.3.4",
     "@types/node": "^26.6.4",
     "@types/ws": "^8.18.2",
