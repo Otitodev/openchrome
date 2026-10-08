@@ -53,8 +53,8 @@ async function requireApproval(actionKey, reason) {
   throw err;
 }
 var SENSITIVE_REF = /pay|checkout|delete|password|send|publish|subscribe/i;
-function sensitiveRefReason(refName) {
-  if (refName && SENSITIVE_REF.test(refName)) return `sensitive element "${refName}"`;
+function sensitiveRefReason(refName2) {
+  if (refName2 && SENSITIVE_REF.test(refName2)) return `sensitive element "${refName2}"`;
   return null;
 }
 
@@ -356,18 +356,46 @@ async function backendCenter(tabId, backendNodeId) {
 }
 function requireBackend(tabId, ref) {
   const el = resolveRef(tabId, ref);
-  if (typeof el.backendNodeId !== "number") {
-    const err = new Error(`element ${ref} has no DOM link. Request a new snapshot.`);
+  return typeof el.backendNodeId === "number" ? el.backendNodeId : null;
+}
+function refName(tabId, ref) {
+  try {
+    return resolveRef(tabId, ref).name ?? "";
+  } catch {
+    return "";
+  }
+}
+async function fallbackClickByName(tabId, name) {
+  await sendCmd2(tabId, "Runtime.enable").catch(() => {
+  });
+  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('a,button,[role=button],[role=link],input[type=submit]')];const el=els.find(e=>((e.innerText||e.value||e.getAttribute('aria-label')||'').toLowerCase().includes(n)));if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.click();return 'OK';})()`;
+  const res = await sendCmd2(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
+  if (res?.result?.value !== "OK") {
+    const err = new Error(`element not clickable by name ${JSON.stringify(name)}. Request a new snapshot.`);
     err.code = "ELEMENT_NOT_FOUND";
     throw err;
   }
-  return el.backendNodeId;
+}
+async function fallbackTypeByName(tabId, name, text) {
+  await sendCmd2(tabId, "Runtime.enable").catch(() => {
+  });
+  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('input,textarea,[contenteditable=true]')];const el=els.find(e=>(((e.placeholder||e.name||e.getAttribute('aria-label')||'')+' '+(document.querySelector('label[for="'+e.id+'"]')?.innerText||'')).toLowerCase().includes(n))||(!n&&e);if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.focus();document.execCommand('selectAll',false,null);document.execCommand('insertText',false,${JSON.stringify(text)});return 'OK';})()`;
+  const res = await sendCmd2(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
+  if (res?.result?.value !== "OK") {
+    const err = new Error(`element not typable by name ${JSON.stringify(name)}. Request a new snapshot.`);
+    err.code = "ELEMENT_NOT_FOUND";
+    throw err;
+  }
 }
 async function clickRef(tabId, ref) {
   await assertWritable("element.click", tabId, ref);
   await attach(tabId);
   const run = async () => {
     const backendNodeId = requireBackend(tabId, ref);
+    if (backendNodeId === null) {
+      await fallbackClickByName(tabId, refName(tabId, ref));
+      return;
+    }
     const { x, y } = await backendCenter(tabId, backendNodeId);
     const base = { x: Math.round(x), y: Math.round(y), button: "left", clickCount: 1 };
     await sendCmd2(tabId, "Input.dispatchMouseEvent", { type: "mousePressed", ...base });
@@ -400,6 +428,10 @@ async function typeRef(tabId, ref, text) {
   }
   const run = async () => {
     const backendNodeId = requireBackend(tabId, ref);
+    if (backendNodeId === null) {
+      await fallbackTypeByName(tabId, refName(tabId, ref), text);
+      return;
+    }
     await sendCmd2(tabId, "DOM.scrollIntoViewIfNeeded", { backendNodeId }).catch(() => {
     });
     await sendCmd2(tabId, "DOM.focus", { backendNodeId }).catch(async () => {
