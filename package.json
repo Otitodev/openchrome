@@ -1,18 +1,39 @@
 {
   "name": "openchrome",
   "version": "0.1.0",
-  "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "description": "Let your coding agent use the Chrome browser you're already using.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openchrome/openchrome.git"
+  },
+  "bin": {
+    "openchrome": "apps/daemon/bin/openchrome.mjs",
+    "openchrome-mcp": "apps/mcp-server/dist/index.cjs",
+    "openchrome-daemon": "apps/daemon/dist/index.cjs"
+  },
+  "files": [
+    "apps/daemon/bin/",
+    "apps/daemon/dist/",
+    "apps/mcp-server/dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "test": "node --test",
-    "daemon": "node apps/daemon/dist/index.js",
-    "mcp": "node apps/mcp-server/dist/index.js",
+    "daemon": "node apps/daemon/dist/index.cjs",
+    "mcp": "node apps/mcp-server/dist/index.cjs",
     "test-app": "node examples/test-app/serve.mjs",
-    "pack:extension": "node scripts/pack-extension.mjs"
+    "pack:extension": "node scripts/pack-extension.mjs",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@resvg/resvg-js": "^2.6.2",
     "@types/chrome": "^0.3.4",
     "@types/node": "^26.6.4",
@@ -20,6 +41,7 @@
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "ws": "^8.22.0"
-  }
+    "zod": "^4.6.5"
+  },
+  "packageManager": "pnpm@12.9.1+sha512.06b055fff5cd20dc12781de173ced3310ce0951bf2ec620211a16045d5444d5c93a663210764ef29a653a610459ba0368f0e74f84d80c54723cf95aae7bc0d6d"
 }

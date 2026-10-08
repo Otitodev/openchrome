@@ -29,7 +29,7 @@ function loadOrCreateToken() {
 }
 
 if (cmd === "daemon") {
-  const dist = join(here, "../dist/index.js");
+  const dist = join(here, "../dist/index.cjs");
   const args = process.argv.slice(3);
   if (existsSync(dist)) {
     const child = spawn(process.execPath, [dist, ...args], { stdio: "inherit" });

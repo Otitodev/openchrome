@@ -6,8 +6,26 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+
 const port = Number(process.env.OPENCHROME_PORT ?? 18721);
-const token = process.env.OPENCHROME_TOKEN ?? (await import("../../daemon/src/token-store.js").then((m: any) => m.loadOrCreateToken()).catch(() => "oc_dev_token"));
+function loadToken(): string {
+  if (process.env.OPENCHROME_TOKEN) return process.env.OPENCHROME_TOKEN;
+  const dir = process.env.OPENCHROME_CONFIG_DIR ?? join(homedir(), ".openchrome");
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const p = join(dir, "token");
+  if (existsSync(p)) {
+    const t = readFileSync(p, "utf8").trim();
+    if (t.startsWith("oc_")) return t;
+  }
+  const t = "oc_" + randomBytes(16).toString("hex");
+  writeFileSync(p, t + "\n", { mode: 0o600 });
+  return t;
+}
+const token = loadToken();
 
 function rpc(method: string, params: unknown, timeoutMs = 25000): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -61,10 +79,8 @@ async function runMcp(): Promise<void> {
 }
 
 // --- one-shot CLI (manual testing) ---
-const [method, rawArg, rawArg2, rawArg3] = [process.argv[2], process.argv[3], process.argv[4], process.argv[5]];
-if (method === undefined) {
-  await runMcp();
-} else {
+function runCli(): void {
+  const [method, rawArg, rawArg2, rawArg3] = [process.argv[2] as string, process.argv[3], process.argv[4], process.argv[5]];
   // PowerShell mangles quotes. Accept: {"tabId":1} | {\"tabId\":1} | tabId=1 | 1744950748 (bare tab id)
   const parseParams = (raw: string | undefined): Record<string, unknown> => {
     if (!raw) return {};
@@ -117,4 +133,10 @@ if (method === undefined) {
     process.exit(2);
   }
   rpc(entry[0], { ...((entry[1] as Record<string, unknown>) ?? {}), timeoutMs: (params as any).timeoutMs ?? 15000 }).then((r) => console.log(JSON.stringify(r, null, 2))).catch((e) => { console.error(String(e)); process.exit(1); });
+}
+
+if (process.argv[2] === undefined) {
+  runMcp().catch((e) => { console.error(String(e)); process.exit(1); });
+} else {
+  runCli();
 }
