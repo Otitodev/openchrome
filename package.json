@@ -4,8 +4,12 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "build": "tsc --noEmit",
-    "test": "node --test"
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "test": "node --test",
+    "daemon": "node apps/daemon/dist/index.js",
+    "mcp": "node apps/mcp-server/dist/index.js",
+    "test-app": "node examples/test-app/serve.mjs"
   },
   "dependencies": {
     "@types/chrome": "^0.3.4",
