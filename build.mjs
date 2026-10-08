@@ -13,9 +13,8 @@ buildSync({
   entryPoints: ["apps/daemon/src/index.ts"],
   bundle: true,
   platform: "node",
-  format: "esm",
-  outfile: "apps/daemon/dist/index.js",
-  external: ["ws"],
+  format: "cjs",
+  outfile: "apps/daemon/dist/index.cjs",
   logLevel: "warning",
 });
 
@@ -24,9 +23,8 @@ buildSync({
   entryPoints: ["apps/mcp-server/src/index.ts"],
   bundle: true,
   platform: "node",
-  format: "esm",
-  outfile: "apps/mcp-server/dist/index.js",
-  external: ["ws", "@modelcontextprotocol/sdk", "zod"],
+  format: "cjs",
+  outfile: "apps/mcp-server/dist/index.cjs",
   logLevel: "warning",
 });
 
