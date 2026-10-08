@@ -21,4 +21,4 @@ OpenChrome processes everything locally on your machine. We collect nothing, tra
 
 ## Contact
 
-Open an issue at https://github.com/openchrome/openchrome for privacy questions.
+Open an issue at https://github.com/Otitodev/openchrome for privacy questions.
