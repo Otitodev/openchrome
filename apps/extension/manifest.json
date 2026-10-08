@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "OpenChrome",
   "version": "0.1.0",
-  "permissions": ["tabs", "activeTab", "debugger", "scripting", "storage", "alarms", "offscreen", "webNavigation"],
+  "permissions": ["tabs", "activeTab", "debugger", "scripting", "storage", "alarms", "webNavigation"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "background.js", "type": "module" },
   "action": {
