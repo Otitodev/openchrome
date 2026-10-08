@@ -365,24 +365,53 @@ function refName(tabId, ref) {
     return "";
   }
 }
-async function fallbackClickByName(tabId, name) {
+async function evaluate(tabId, expression) {
   await sendCmd2(tabId, "Runtime.enable").catch(() => {
   });
-  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('a,button,[role=button],[role=link],input[type=submit]')];const el=els.find(e=>((e.innerText||e.value||e.getAttribute('aria-label')||'').toLowerCase().includes(n)));if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.click();return 'OK';})()`;
-  const res = await sendCmd2(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
-  if (res?.result?.value !== "OK") {
-    const err = new Error(`element not clickable by name ${JSON.stringify(name)}. Request a new snapshot.`);
+  const res = await sendCmd2(tabId, "Runtime.evaluate", { expression, returnByValue: true });
+  if (res?.exceptionDetails) {
+    const err = new Error(`in-page script failed: ${res.exceptionDetails.text ?? "exception"}`);
+    err.code = "ELEMENT_NOT_FOUND";
+    throw err;
+  }
+  return String(res?.result?.value ?? "no result");
+}
+async function fallbackClickByName(tabId, name) {
+  const lines = [
+    "(()=>{try{",
+    `const n=${JSON.stringify(name.toLowerCase())};`,
+    "const els=[...document.querySelectorAll('a,button,[role=button],[role=link],input[type=submit]')];",
+    "const el=els.find(e=>((e.innerText||e.value||e.getAttribute('aria-label')||'').toLowerCase().includes(n)));",
+    "if(!el)return 'NOEL clickables='+els.length;",
+    "el.scrollIntoView({block:'center'});el.click();return 'OK';",
+    "}catch(e){return 'EXC '+(e&&e.message||e);}})()"
+  ];
+  const v = await evaluate(tabId, lines.join("\n"));
+  if (v !== "OK") {
+    const err = new Error(`click fallback failed for ${JSON.stringify(name)} (${v}). Request a new snapshot.`);
     err.code = "ELEMENT_NOT_FOUND";
     throw err;
   }
 }
 async function fallbackTypeByName(tabId, name, text) {
-  await sendCmd2(tabId, "Runtime.enable").catch(() => {
-  });
-  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('input,textarea,[contenteditable=true]')];const el=els.find(e=>(((e.placeholder||e.name||e.getAttribute('aria-label')||'')+' '+(document.querySelector('label[for="'+e.id+'"]')?.innerText||'')).toLowerCase().includes(n))||(!n&&e);if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.focus();document.execCommand('selectAll',false,null);document.execCommand('insertText',false,${JSON.stringify(text)});return 'OK';})()`;
-  const res = await sendCmd2(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
-  if (res?.result?.value !== "OK") {
-    const err = new Error(`element not typable by name ${JSON.stringify(name)}. Request a new snapshot.`);
+  const lines = [
+    "(()=>{try{",
+    `const n=${JSON.stringify(name.toLowerCase())};`,
+    `const t=${JSON.stringify(text)};`,
+    "const els=[...document.querySelectorAll('input,textarea,[contenteditable=true]')];",
+    "const labelOf=e=>{const l=e.closest('label');return ((e.placeholder||'')+' '+(e.name||'')+' '+(e.getAttribute('aria-label')||'')+' '+((l&&l.innerText)||'')).toLowerCase();};",
+    "const el=els.find(e=>!e.disabled&&e.type!=='hidden'&&(!n||labelOf(e).indexOf(n)>=0));",
+    "if(!el)return 'NOEL inputs='+els.length;",
+    "el.scrollIntoView({block:'center'});el.focus();",
+    "let ok=false;",
+    "try{ok=document.execCommand('insertText',false,t);}catch(e){}",
+    "if(!ok){try{el.value=t;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));ok=true;}catch(e){return 'SETFAIL '+e;}}",
+    "return 'OK';",
+    "}catch(e){return 'EXC '+(e&&e.message||e);}})()"
+  ];
+  const v = await evaluate(tabId, lines.join("\n"));
+  if (v !== "OK") {
+    const err = new Error(`type fallback failed for ${JSON.stringify(name)} (${v}). Request a new snapshot.`);
     err.code = "ELEMENT_NOT_FOUND";
     throw err;
   }
@@ -466,8 +495,10 @@ async function pressKey(tabId, key2, ref) {
   await attach(tabId);
   if (ref) {
     const backendNodeId = requireBackend(tabId, ref);
-    await sendCmd2(tabId, "DOM.focus", { backendNodeId }).catch(() => {
-    });
+    if (backendNodeId !== null) {
+      await sendCmd2(tabId, "DOM.focus", { backendNodeId }).catch(() => {
+      });
+    }
   }
   const mapped = KEY_MAP[key2] ?? { windowsVirtualKeyCode: 0, key: key2, code: key2 };
   for (const type of ["rawKeyDown", "keyUp"]) {

@@ -41,26 +41,56 @@ function refName(tabId: number, ref: string): string {
   }
 }
 
-// Fallback when AX omits backendDOMNodeIds (common for links/static text):
-// find a clickable element by accessible name/text in-page and click it.
-async function fallbackClickByName(tabId: number, name: string): Promise<void> {
+async function evaluate(tabId: number, expression: string): Promise<string> {
   await sendCmd(tabId, "Runtime.enable").catch(() => {});
-  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('a,button,[role=button],[role=link],input[type=submit]')];const el=els.find(e=>((e.innerText||e.value||e.getAttribute('aria-label')||'').toLowerCase().includes(n)));if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.click();return 'OK';})()`;
-  const res = await sendCmd(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
-  if (res?.result?.value !== "OK") {
-    const err: any = new Error(`element not clickable by name ${JSON.stringify(name)}. Request a new snapshot.`);
+  const res = await sendCmd(tabId, "Runtime.evaluate", { expression, returnByValue: true });
+  if (res?.exceptionDetails) {
+    const err: any = new Error(`in-page script failed: ${res.exceptionDetails.text ?? "exception"}`);
+    err.code = "ELEMENT_NOT_FOUND";
+    throw err;
+  }
+  return String(res?.result?.value ?? "no result");
+}
+
+// Fallback when AX omits backendDOMNodeIds: click by accessible name in-page.
+async function fallbackClickByName(tabId: number, name: string): Promise<void> {
+  const lines = [
+    "(()=>{try{",
+    `const n=${JSON.stringify(name.toLowerCase())};`,
+    "const els=[...document.querySelectorAll('a,button,[role=button],[role=link],input[type=submit]')];",
+    "const el=els.find(e=>((e.innerText||e.value||e.getAttribute('aria-label')||'').toLowerCase().includes(n)));",
+    "if(!el)return 'NOEL clickables='+els.length;",
+    "el.scrollIntoView({block:'center'});el.click();return 'OK';",
+    "}catch(e){return 'EXC '+(e&&e.message||e);}})()",
+  ];
+  const v = await evaluate(tabId, lines.join("\n"));
+  if (v !== "OK") {
+    const err: any = new Error(`click fallback failed for ${JSON.stringify(name)} (${v}). Request a new snapshot.`);
     err.code = "ELEMENT_NOT_FOUND";
     throw err;
   }
 }
 
-// Fallback for typing when no DOM link: find input by name/placeholder/label text.
+// Fallback for typing when no DOM link: find input by placeholder/name/label text.
 async function fallbackTypeByName(tabId: number, name: string, text: string): Promise<void> {
-  await sendCmd(tabId, "Runtime.enable").catch(() => {});
-  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('input,textarea,[contenteditable=true]')];const el=els.find(e=>(((e.placeholder||e.name||e.getAttribute('aria-label')||'')+' '+(document.querySelector('label[for=\"'+e.id+'\"]')?.innerText||'')).toLowerCase().includes(n))||(!n&&e);if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.focus();document.execCommand('selectAll',false,null);document.execCommand('insertText',false,${JSON.stringify(text)});return 'OK';})()`;
-  const res = await sendCmd(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
-  if (res?.result?.value !== "OK") {
-    const err: any = new Error(`element not typable by name ${JSON.stringify(name)}. Request a new snapshot.`);
+  const lines = [
+    "(()=>{try{",
+    `const n=${JSON.stringify(name.toLowerCase())};`,
+    `const t=${JSON.stringify(text)};`,
+    "const els=[...document.querySelectorAll('input,textarea,[contenteditable=true]')];",
+    "const labelOf=e=>{const l=e.closest('label');return ((e.placeholder||'')+' '+(e.name||'')+' '+(e.getAttribute('aria-label')||'')+' '+((l&&l.innerText)||'')).toLowerCase();};",
+    "const el=els.find(e=>!e.disabled&&e.type!=='hidden'&&(!n||labelOf(e).indexOf(n)>=0));",
+    "if(!el)return 'NOEL inputs='+els.length;",
+    "el.scrollIntoView({block:'center'});el.focus();",
+    "let ok=false;",
+    "try{ok=document.execCommand('insertText',false,t);}catch(e){}",
+    "if(!ok){try{el.value=t;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));ok=true;}catch(e){return 'SETFAIL '+e;}}",
+    "return 'OK';",
+    "}catch(e){return 'EXC '+(e&&e.message||e);}})()",
+  ];
+  const v = await evaluate(tabId, lines.join("\n"));
+  if (v !== "OK") {
+    const err: any = new Error(`type fallback failed for ${JSON.stringify(name)} (${v}). Request a new snapshot.`);
     err.code = "ELEMENT_NOT_FOUND";
     throw err;
   }
@@ -150,7 +180,9 @@ export async function pressKey(tabId: number, key: string, ref?: string): Promis
   await attach(tabId);
   if (ref) {
     const backendNodeId = requireBackend(tabId, ref);
-    await sendCmd(tabId, "DOM.focus", { backendNodeId }).catch(() => {});
+    if (backendNodeId !== null) {
+      await sendCmd(tabId, "DOM.focus", { backendNodeId }).catch(() => {});
+    }
   }
   const mapped = KEY_MAP[key] ?? { windowsVirtualKeyCode: 0, key, code: key };
   for (const type of ["rawKeyDown", "keyUp"] as const) {
