@@ -1,11 +1,14 @@
 {
-  "name": "openchrome",
+  "name": "@otitodev/openchrome",
   "version": "0.1.0",
   "description": "Let your coding agent use the Chrome browser you're already using.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openchrome/openchrome.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "bin": {
     "openchrome": "apps/daemon/bin/openchrome.mjs",

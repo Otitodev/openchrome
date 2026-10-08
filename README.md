@@ -11,7 +11,7 @@ Agent --MCP(stdio)--> openchrome-mcp --WS(127.0.0.1:18721)--> daemon <--WS--> Ch
 Requires Node.js 22+ and Chrome.
 
 ```bash
-npm install -g openchrome
+npm install -g @otitodev/openchrome
 openchrome daemon        # start the local bridge (leave running)
 ```
 
