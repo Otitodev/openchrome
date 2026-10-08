@@ -28,14 +28,42 @@ async function backendCenter(tabId: number, backendNodeId: number): Promise<{ x:
   return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
 }
 
-function requireBackend(tabId: number, ref: string): number {
+function requireBackend(tabId: number, ref: string): number | null {
   const el = resolveRef(tabId, ref);
-  if (typeof el.backendNodeId !== "number") {
-    const err: any = new Error(`element ${ref} has no DOM link. Request a new snapshot.`);
+  return typeof el.backendNodeId === "number" ? el.backendNodeId : null;
+}
+
+function refName(tabId: number, ref: string): string {
+  try {
+    return resolveRef(tabId, ref).name ?? "";
+  } catch {
+    return "";
+  }
+}
+
+// Fallback when AX omits backendDOMNodeIds (common for links/static text):
+// find a clickable element by accessible name/text in-page and click it.
+async function fallbackClickByName(tabId: number, name: string): Promise<void> {
+  await sendCmd(tabId, "Runtime.enable").catch(() => {});
+  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('a,button,[role=button],[role=link],input[type=submit]')];const el=els.find(e=>((e.innerText||e.value||e.getAttribute('aria-label')||'').toLowerCase().includes(n)));if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.click();return 'OK';})()`;
+  const res = await sendCmd(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
+  if (res?.result?.value !== "OK") {
+    const err: any = new Error(`element not clickable by name ${JSON.stringify(name)}. Request a new snapshot.`);
     err.code = "ELEMENT_NOT_FOUND";
     throw err;
   }
-  return el.backendNodeId;
+}
+
+// Fallback for typing when no DOM link: find input by name/placeholder/label text.
+async function fallbackTypeByName(tabId: number, name: string, text: string): Promise<void> {
+  await sendCmd(tabId, "Runtime.enable").catch(() => {});
+  const expr = `(function(){const n=${JSON.stringify(name.toLowerCase())};const els=[...document.querySelectorAll('input,textarea,[contenteditable=true]')];const el=els.find(e=>(((e.placeholder||e.name||e.getAttribute('aria-label')||'')+' '+(document.querySelector('label[for=\"'+e.id+'\"]')?.innerText||'')).toLowerCase().includes(n))||(!n&&e);if(!el)return 'NOTFOUND';el.scrollIntoView({block:'center'});el.focus();document.execCommand('selectAll',false,null);document.execCommand('insertText',false,${JSON.stringify(text)});return 'OK';})()`;
+  const res = await sendCmd(tabId, "Runtime.evaluate", { expression: expr, returnByValue: true });
+  if (res?.result?.value !== "OK") {
+    const err: any = new Error(`element not typable by name ${JSON.stringify(name)}. Request a new snapshot.`);
+    err.code = "ELEMENT_NOT_FOUND";
+    throw err;
+  }
 }
 
 export async function clickRef(tabId: number, ref: string): Promise<{ tabId: number; ref: string; clicked: true }> {
@@ -43,6 +71,10 @@ export async function clickRef(tabId: number, ref: string): Promise<{ tabId: num
   await attach(tabId);
   const run = async (): Promise<void> => {
     const backendNodeId = requireBackend(tabId, ref);
+    if (backendNodeId === null) {
+      await fallbackClickByName(tabId, refName(tabId, ref));
+      return;
+    }
     const { x, y } = await backendCenter(tabId, backendNodeId);
     const base = { x: Math.round(x), y: Math.round(y), button: "left" as const, clickCount: 1 };
     await sendCmd(tabId, "Input.dispatchMouseEvent", { type: "mousePressed", ...base });
@@ -77,6 +109,10 @@ export async function typeRef(tabId: number, ref: string, text: string): Promise
   }
   const run = async (): Promise<void> => {
     const backendNodeId = requireBackend(tabId, ref);
+    if (backendNodeId === null) {
+      await fallbackTypeByName(tabId, refName(tabId, ref), text);
+      return;
+    }
     await sendCmd(tabId, "DOM.scrollIntoViewIfNeeded", { backendNodeId }).catch(() => {});
     await sendCmd(tabId, "DOM.focus", { backendNodeId }).catch(async () => {
       // fallback: click to focus then type

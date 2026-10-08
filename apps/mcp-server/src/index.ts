@@ -29,8 +29,41 @@ function rpc(method: string, params: unknown, timeoutMs = 15000): Promise<unknow
   });
 }
 
-const [method, argJson] = [process.argv[2] ?? "browser_status", process.argv[3]];
-const params = argJson ? JSON.parse(argJson) : {};
+const [method, rawArg, rawArg2, rawArg3] = [process.argv[2] ?? "browser_status", process.argv[3], process.argv[4], process.argv[5]];
+// PowerShell mangles quotes (strips backslashes, keeps/leaves single quotes).
+// Accept: {"tabId":1} | '{"tabId":1}' | {\"tabId\":1} | tabId=1 | 1744950748 (bare tab id)
+function parseParams(raw: string | undefined): Record<string, unknown> {
+  if (!raw) return {};
+  let s = raw.trim();
+  if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"') && s.includes("{"))) {
+    s = s.slice(1, -1);
+  }
+  s = s.replace(/\\"/g, '"');
+  try {
+    const parsed = JSON.parse(s);
+    if (typeof parsed === "number") return { tabId: parsed };
+    return parsed;
+  } catch {}
+  const mTab = s.match(/tabId\s*=\s*(\d+)/) ?? s.match(/^(\d+)$/);
+  if (mTab) return { tabId: Number(mTab[1]) };
+  throw new Error(`invalid JSON params: ${raw}`);
+}
+const params = parseParams(rawArg);
+// positional convenience: browser_click <tabId> <ref> | browser_type <tabId> <ref> <text> | browser_press <tabId> <key> [ref]
+if (rawArg !== undefined && rawArg2 !== undefined) {
+  const asNum = Number(rawArg);
+  if (Number.isInteger(asNum) && !Object.prototype.hasOwnProperty.call(params, "ref") && !Object.prototype.hasOwnProperty.call(params, "key")) {
+    params.tabId = asNum;
+    if (method === "browser_click") params.ref = rawArg2;
+    else if (method === "browser_press") {
+      params.key = rawArg2;
+      if (rawArg3 !== undefined) params.ref = rawArg3;
+    } else if (method === "browser_type") {
+      params.ref = rawArg2;
+      if (rawArg3 !== undefined) params.text = rawArg3;
+    }
+  }
+}
 const MAP: Record<string, [string, unknown]> = {
   browser_status: ["status.get", {}],
   browser_tabs: ["tabs.list", params],
