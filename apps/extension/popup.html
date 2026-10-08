@@ -1,15 +1,66 @@
-<!doctype html><html><body style="width:320px;font-family:sans-serif">
-<h1>OpenChrome</h1>
-<p id="status">Disconnected</p>
-<input id="token" placeholder="Paste oc_... token from openchrome init" style="width:100%" />
-<button id="pair">Pair</button>
-<button id="toggle">Enable/Disable</button>
-<h3>Allowed Sites</h3>
-<ul id="rules"></ul>
-<input id="pattern" placeholder="e.g. myapp.com or *.myapp.com" style="width:60%" />
-<select id="policy"><option value="allow">Allow</option><option value="ask">Ask</option><option value="deny">Deny</option></select>
-<button id="addRule">Add</button>
-<h3>Pending approvals</h3>
+<!doctype html>
+<html>
+<head><meta charset="utf-8">
+<style>
+:root{
+  --bg:#fff; --ink:#1a1d21; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#0d9488; --accent-ink:#fff; --amber:#b45309; --amber-bg:#fef3c7;
+  --danger:#dc2626; --radius:8px;
+}
+*{box-sizing:border-box}
+body{width:320px;margin:0;padding:12px;font:13px/1.45 -apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+h1{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+h1 img{width:20px;height:20px}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px}
+.row{display:flex;align-items:center;gap:8px}
+.status{padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:4px}
+.dot{width:9px;height:9px;border-radius:50%;background:#9ca3af;flex-shrink:0}
+.dot.on{background:var(--accent);box-shadow:0 0 0 3px rgba(13,148,136,.2)}
+.muted{color:var(--muted)}
+input[type=text],input:not([type]){width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;margin:4px 0}
+button{font:inherit;border-radius:6px;border:1px solid var(--line);background:#fff;padding:6px 10px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.danger-ghost{color:var(--danger)}
+button:disabled{opacity:.5;cursor:default}
+ul{list-style:none;margin:0;padding:0}
+.card{border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px}
+.approval{border-left:4px solid var(--amber)}
+.approval p{margin:0 0 8px;overflow-wrap:anywhere}
+.site{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.site code{font-family:ui-monospace,Consolas,monospace;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:11px;padding:1px 8px;border-radius:99px;flex-shrink:0}
+.pill.allow{background:#ccfbf1;color:#0f766e}
+.pill.ask{background:var(--amber-bg);color:var(--amber)}
+.pill.deny{background:#f3f4f6;color:var(--muted)}
+.x{border:none;color:var(--muted);padding:2px 6px}
+.actions{display:flex;gap:6px}
+.addrow{display:flex;gap:6px;margin-top:6px}
+.addrow input{flex:1;margin:0}
+.addrow select{font:inherit;border:1px solid var(--line);border-radius:6px}
+.empty{color:var(--muted);padding:4px 0}
+</style>
+</head>
+<body>
+<h1><img src="icons/icon48.png" alt="">OpenChrome</h1>
+<div class="status row"><span id="dot" class="dot"></span><span id="status">…</span></div>
+<div class="row" style="margin-top:6px">
+  <input id="token" placeholder="Paste oc_… token from openchrome init" aria-label="Pairing token">
+</div>
+<div class="actions" style="margin-top:6px">
+  <button id="pair" class="primary">Pair</button>
+  <button id="toggle">Disable</button>
+</div>
+
+<h2>Pending approvals</h2>
 <ul id="pending"></ul>
+
+<h2>Allowed sites</h2>
+<ul id="rules"></ul>
+<div class="addrow">
+  <input id="pattern" placeholder="myapp.com" aria-label="Site pattern">
+  <select id="policy" aria-label="Policy"><option value="allow">Allow</option><option value="ask">Ask</option><option value="deny">Deny</option></select>
+  <button id="addRule">Add</button>
+</div>
 <script src="popup.js"></script>
-</body></html>
+</body>
+</html>
