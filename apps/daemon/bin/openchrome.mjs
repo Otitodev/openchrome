@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// openchrome CLI: daemon | init | reset-token | status. Self-contained (no TS imports).
+// opc CLI: daemon | init | reset-token | status. Self-contained (no TS imports).
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -40,7 +40,7 @@ if (cmd === "daemon") {
   }
 } else if (cmd === "init") {
   const token = loadOrCreateToken();
-  console.log(`OpenChrome\n\nDaemon token (paste into extension popup Pairing field):\n  ${token}\n\nDaemon endpoint: ws://127.0.0.1:${port}\n\nNext:\n  1. run: openchrome daemon (or npm run daemon)\n  2. load apps/extension in chrome://extensions (Developer mode)\n  3. paste token into popup -> Pair\n  4. run: openchrome status`);
+  console.log(`OpenChrome\n\nDaemon token (paste into extension popup Pairing field):\n  ${token}\n\nDaemon endpoint: ws://127.0.0.1:${port}\n\nNext:\n  1. run: opchrm daemon (or npm run daemon)\n  2. load apps/extension in chrome://extensions (Developer mode)\n  3. paste token into popup -> Pair\n  4. run: opchrm status`);
 } else if (cmd === "reset-token") {
   const t = "oc_" + randomBytes(16).toString("hex");
   writeFileSync(tokenPath(), t + "\n", { mode: 0o600 });
@@ -71,5 +71,5 @@ if (cmd === "daemon") {
     });
   }
 } else {
-  console.log(`usage: openchrome <daemon|init|reset-token|status> [--port N]`);
+  console.log(`usage: opchrm <daemon|init|reset-token|status> [--port N]`);
 }

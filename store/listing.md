@@ -17,7 +17,7 @@ The agent can list tabs, navigate, read pages, click buttons, fill forms, take s
 
 You stay in control: localhost is allowed by default, other sites ask for approval first, denied sites are hidden from the agent. Password fields and sensitive actions require explicit approval in the popup. Everything runs locally — the bridge binds to 127.0.0.1 only, and no browsing data ever leaves your machine.
 
-Requires the free OpenChrome command-line tools (`npm install -g @otitodev/openchrome`) which host the local bridge the extension pairs with.
+Requires the free command-line tools (`npm install -g opchrm`) which host the local bridge the extension pairs with.
 
 ## Category
 
