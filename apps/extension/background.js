@@ -778,14 +778,23 @@ async function handleCommand(msg) {
 }
 
 // apps/extension/src/background.ts
+var warnedNoOffscreen = false;
 async function ensureOffscreen() {
+  const offscreen = chrome.offscreen;
+  if (!offscreen) {
+    if (!warnedNoOffscreen) {
+      warnedNoOffscreen = true;
+      console.warn("OpenChrome: chrome.offscreen unavailable \u2014 update Chrome to 116+ to connect.");
+    }
+    return;
+  }
   try {
-    const has = await chrome.offscreen.hasDocument?.();
+    const has = await offscreen.hasDocument?.();
     if (has) return;
   } catch {
   }
   try {
-    await chrome.offscreen.createDocument({
+    await offscreen.createDocument({
       url: "offscreen.html",
       // NOTE: WEB_SOCKET is not a valid OffscreenReason in stable Chrome; BLOBS covers network/websocket use.
       reasons: ["BLOBS"],
