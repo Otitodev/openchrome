@@ -2,6 +2,7 @@
 // Run: node build.mjs
 import { buildSync } from "esbuild";
 import { execSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 
 console.log("typecheck (node)...");
 execSync("node node_modules/typescript/bin/tsc --noEmit --skipLibCheck", { stdio: "inherit", shell: true });
@@ -14,7 +15,7 @@ buildSync({
   bundle: true,
   platform: "node",
   format: "cjs",
-  outfile: "apps/daemon/dist/index.cjs",
+  outfile: "apps/daemon/dist/index.js",
   logLevel: "warning",
 });
 
@@ -24,7 +25,7 @@ buildSync({
   bundle: true,
   platform: "node",
   format: "cjs",
-  outfile: "apps/mcp-server/dist/index.cjs",
+  outfile: "apps/mcp-server/dist/index.js",
   logLevel: "warning",
 });
 
@@ -45,5 +46,11 @@ buildSync({
   outfile: "apps/extension/offscreen.js",
   logLevel: "warning",
 });
+
+console.log("marking dist as commonjs...");
+for (const d of ["apps/daemon/dist", "apps/mcp-server/dist"]) {
+  mkdirSync(d, { recursive: true });
+  writeFileSync(`${d}/package.json`, JSON.stringify({ type: "commonjs" }, null, 2) + "\n");
+}
 
 console.log("build ok: apps/daemon/dist, apps/mcp-server/dist, apps/extension/*.js");

@@ -1,6 +1,6 @@
 {
   "name": "opchrm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Let your coding agent use the Chrome browser you're already using.",
   "license": "MIT",
   "repository": {
@@ -12,13 +12,14 @@
   },
   "bin": {
     "opchrm": "apps/daemon/bin/openchrome.mjs",
-    "opchrm-mcp": "apps/mcp-server/dist/index.cjs",
-    "opchrm-daemon": "apps/daemon/dist/index.cjs"
+    "opchrm-mcp": "bin/opchrm-mcp.js",
+    "opchrm-daemon": "bin/opchrm-daemon.js"
   },
   "files": [
     "apps/daemon/bin/",
     "apps/daemon/dist/",
     "apps/mcp-server/dist/",
+    "bin/",
     "README.md",
     "LICENSE"
   ],
@@ -26,8 +27,8 @@
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "test": "node --test",
-    "daemon": "node apps/daemon/dist/index.cjs",
-    "mcp": "node apps/mcp-server/dist/index.cjs",
+    "daemon": "node apps/daemon/dist/index.js",
+    "mcp": "node apps/mcp-server/dist/index.js",
     "test-app": "node examples/test-app/serve.mjs",
     "pack:extension": "node scripts/pack-extension.mjs",
     "prepublishOnly": "npm run build"
