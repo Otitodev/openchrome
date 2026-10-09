@@ -1,5 +1,5 @@
 {
-  "name": "@otitodev/openchrome",
+  "name": "opchrm",
   "version": "0.1.0",
   "description": "Let your coding agent use the Chrome browser you're already using.",
   "license": "MIT",
@@ -11,9 +11,9 @@
     "access": "public"
   },
   "bin": {
-    "openchrome": "apps/daemon/bin/openchrome.mjs",
-    "openchrome-mcp": "apps/mcp-server/dist/index.cjs",
-    "openchrome-daemon": "apps/daemon/dist/index.cjs"
+    "opchrm": "apps/daemon/bin/openchrome.mjs",
+    "opchrm-mcp": "apps/mcp-server/dist/index.cjs",
+    "opchrm-daemon": "apps/daemon/dist/index.cjs"
   },
   "files": [
     "apps/daemon/bin/",

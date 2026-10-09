@@ -7,7 +7,7 @@ async function refresh() {
   const enabled = s.ocEnabled !== false;
   $("dot").className = "dot" + (paired && enabled ? " on" : "");
   $("status").textContent = !paired
-    ? "Not paired — paste token from openchrome init"
+    ? "Not paired — paste token from opchrm init"
     : enabled ? "Connected" : "Paused";
   $("toggle").textContent = enabled ? "Disable" : "Enable";
 

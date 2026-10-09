@@ -11,20 +11,20 @@ Agent --MCP(stdio)--> openchrome-mcp --WS(127.0.0.1:18721)--> daemon <--WS--> Ch
 Requires Node.js 22+ and Chrome.
 
 ```bash
-npm install -g @otitodev/openchrome
-openchrome daemon        # start the local bridge (leave running)
+npm install -g opchrm
+opchrm daemon        # start the local bridge (leave running)
 ```
 
 Load the extension once: `chrome://extensions` → Developer mode → Load unpacked → select the `extension/` folder from this repo (or unzip `dist/openchrome-extension.zip`).
 
 ```bash
-openchrome init          # prints a pairing token
+opchrm init          # prints a pairing token
 ```
 
 Paste the token into the extension popup → Pair. Verify:
 
 ```bash
-openchrome status        # extensionConnected: true
+opchrm status        # extensionConnected: true
 ```
 
 ## Use with OpenCode
