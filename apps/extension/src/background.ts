@@ -1,13 +1,24 @@
 // Background SW: owns ALL chrome.* APIs. Offscreen owns only the WebSocket and relays here.
 import { handleCommand } from "./commands.js";
 
+let warnedNoOffscreen = false;
+
 async function ensureOffscreen(): Promise<void> {
+  const offscreen = (chrome as any).offscreen;
+  if (!offscreen) {
+    // Chrome <116 has no offscreen API; without it the SW cannot hold the bridge socket.
+    if (!warnedNoOffscreen) {
+      warnedNoOffscreen = true;
+      console.warn("OpenChrome: chrome.offscreen unavailable — update Chrome to 116+ to connect.");
+    }
+    return;
+  }
   try {
-    const has = await (chrome.offscreen as any).hasDocument?.();
+    const has = await offscreen.hasDocument?.();
     if (has) return;
   } catch {}
   try {
-    await chrome.offscreen.createDocument({
+    await offscreen.createDocument({
       url: "offscreen.html",
       // NOTE: WEB_SOCKET is not a valid OffscreenReason in stable Chrome; BLOBS covers network/websocket use.
       reasons: ["BLOBS" as any],
