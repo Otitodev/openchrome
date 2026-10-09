@@ -1,66 +1,100 @@
 <!doctype html>
-<html>
-<head><meta charset="utf-8">
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <style>
-:root{
-  --bg:#fff; --ink:#1a1d21; --muted:#6b7280; --line:#e5e7eb;
-  --accent:#0d9488; --accent-ink:#fff; --amber:#b45309; --amber-bg:#fef3c7;
-  --danger:#dc2626; --radius:8px;
-}
-*{box-sizing:border-box}
-body{width:320px;margin:0;padding:12px;font:13px/1.45 -apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
-h1{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
-h1 img{width:20px;height:20px}
-h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 6px}
-.row{display:flex;align-items:center;gap:8px}
-.status{padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:4px}
-.dot{width:9px;height:9px;border-radius:50%;background:#9ca3af;flex-shrink:0}
-.dot.on{background:var(--accent);box-shadow:0 0 0 3px rgba(13,148,136,.2)}
-.muted{color:var(--muted)}
-input[type=text],input:not([type]){width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;margin:4px 0}
-button{font:inherit;border-radius:6px;border:1px solid var(--line);background:#fff;padding:6px 10px;cursor:pointer}
-button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-button.danger-ghost{color:var(--danger)}
-button:disabled{opacity:.5;cursor:default}
-ul{list-style:none;margin:0;padding:0}
-.card{border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px}
-.approval{border-left:4px solid var(--amber)}
-.approval p{margin:0 0 8px;overflow-wrap:anywhere}
-.site{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
-.site code{font-family:ui-monospace,Consolas,monospace;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis}
-.pill{font-size:11px;padding:1px 8px;border-radius:99px;flex-shrink:0}
-.pill.allow{background:#ccfbf1;color:#0f766e}
-.pill.ask{background:var(--amber-bg);color:var(--amber)}
-.pill.deny{background:#f3f4f6;color:var(--muted)}
-.x{border:none;color:var(--muted);padding:2px 6px}
-.actions{display:flex;gap:6px}
-.addrow{display:flex;gap:6px;margin-top:6px}
-.addrow input{flex:1;margin:0}
-.addrow select{font:inherit;border:1px solid var(--line);border-radius:6px}
-.empty{color:var(--muted);padding:4px 0}
+:root{--surface:#ffffff;--surface-subtle:#eef2f3;--ink:#18282e;--muted:#53656e;--line:#d7e0e3;--accent:#087f70;--accent-hover:#066759;--accent-soft:#e2f3ee;--amber:#94500c;--amber-bg:#fff4df;--danger:#b93838;--danger-bg:#fff0ef;--focus:#286ed3;--radius:10px;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;width:390px;background:var(--surface);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h4,p{margin:0}code,.mono{font-family:var(--mono);font-size:.85em}
+.popup-top{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+.popup-brand{display:flex;gap:9px;align-items:center;font-weight:650;font-size:1rem;letter-spacing:-.025em}
+.popup-brand img{width:28px;height:28px;border-radius:7px}
+.status-badge{display:inline-flex;align-items:center;gap:6px;border-radius:5px;padding:3px 7px;font-size:.75rem;font-weight:550;background:var(--accent-soft);color:#096354;white-space:nowrap}
+.status-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status-badge.neutral{background:var(--surface-subtle);color:var(--muted)}
+.popup-inner{padding:16px}
+.button{border:1px solid #c2cfd4;border-radius:7px;color:var(--ink);background:white;padding:9px 14px;min-height:40px;font-size:.8125rem;font-weight:550;display:inline-flex;justify-content:center;align-items:center;gap:7px}
+.button:hover{background:var(--surface-subtle)}
+.button.primary{background:var(--accent);color:white;border-color:var(--accent)}
+.button.primary:hover{background:var(--accent-hover)}
+.button.danger{color:var(--danger);border-color:#e6bcbc}
+.button.compact{min-height:36px;padding:6px 10px}
+.button.quiet{border-color:transparent;background:transparent;color:var(--muted);min-height:36px}
+.actions{display:flex;gap:8px}
+.approval-actions{display:flex;gap:8px;margin-top:12px}
+.approval-actions .button.primary{flex:1}
+.connection-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.connection-row .btns{display:flex;gap:6px;flex-shrink:0}
+.small{font-size:.75rem;color:var(--muted)}
+.popup-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.popup-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.popup-section h4{font-size:.8125rem;font-weight:600}
+.count{font:11px var(--mono);color:var(--muted);background:var(--surface-subtle);padding:1px 6px;border-radius:4px}
+.approval{border:1px solid #edd3aa;border-radius:var(--radius);background:var(--amber-bg);padding:14px;margin-bottom:8px}
+.approval-head{color:var(--amber);font-weight:600;font-size:.8125rem}
+.approval p{font-size:.8125rem;margin-top:8px;overflow-wrap:anywhere}
+.approval .domain{display:block;font:12px var(--mono);color:var(--muted);margin-top:6px;overflow-wrap:anywhere}
+.approval-note{font-size:.75rem;color:#765423;margin-top:8px}
+.empty{border:1px dashed #bfced3;border-radius:var(--radius);padding:14px;color:var(--muted);font-size:.8125rem}
+.site-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.site-row:last-child{border:0}
+.site-row code{font-size:.75rem;overflow-wrap:anywhere}
+.policy{border:1px solid var(--line);border-radius:6px;background:white;padding:5px 8px;color:var(--muted);font-size:.75rem;min-height:32px}
+.policy.allow{background:var(--accent-soft);border-color:#bcded2;color:#096354}
+.policy.ask{background:var(--amber-bg);border-color:#edd3aa;color:var(--amber)}
+.policy.deny{background:var(--danger-bg);border-color:#eacbca;color:var(--danger)}
+.field-hint{color:var(--muted);font-size:.75rem;margin-top:6px}
+.field-error{color:var(--danger);font-size:.8125rem;margin-top:6px}
+.addrow{display:flex;gap:6px;margin-top:8px}
+.addrow input{flex:1;min-width:0;border:1px solid #a6b9c2;border-radius:7px;padding:8px 10px;min-height:38px;font-size:.8125rem}
+.addrow select{border:1px solid var(--line);border-radius:6px;font-size:.75rem}
+.pairing label{font-size:.8125rem;font-weight:600;display:block;margin:14px 0 6px}
+.input{width:100%;border:1px solid #a6b9c2;border-radius:7px;padding:10px 12px;min-height:42px;font-size:.875rem}
+.input[aria-invalid=true]{border-color:var(--danger);background:#fffafa}
+.pairing .button{width:100%;margin-top:12px}
+.popup-foot{border-top:1px solid var(--line);padding:10px 16px;background:#fafcfc;font-size:.75rem;color:var(--muted)}
+.popup-foot strong{color:var(--accent);font-weight:550}
 </style>
 </head>
 <body>
-<h1><img src="icons/icon48.png" alt="">OpenChrome</h1>
-<div class="status row"><span id="dot" class="dot"></span><span id="status">…</span></div>
-<div class="row" style="margin-top:6px">
-  <input id="token" placeholder="Paste oc_… token from opchrm init" aria-label="Pairing token">
+<div class="popup-top">
+  <div class="popup-brand"><img src="icons/icon48.png" alt="">OpenChrome</div>
+  <span id="badge" class="status-badge"><span class="dot"></span><span id="badge-label">Connected</span></span>
 </div>
-<div class="actions" style="margin-top:6px">
-  <button id="pair" class="primary">Pair</button>
-  <button id="toggle">Disable</button>
+<div class="popup-inner">
+  <div id="paired-content">
+    <div class="connection-row">
+      <div><strong id="conn-title">Agent connected</strong><p class="small" id="conn-detail">Ready for permitted browser actions.</p></div>
+      <div class="btns"><button class="button compact" id="pause">Pause</button><button class="button compact quiet" id="disconnect" title="Remove pairing token">Disconnect</button></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-head"><h4>Pending approval</h4><span id="approval-count" class="count">0</span></div>
+      <div id="pending"></div>
+      <div id="approval-empty" class="empty">No pending approvals</div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-head"><h4>Site permissions</h4><span class="small">Ongoing rules</span></div>
+      <div id="rules"></div>
+      <div class="addrow">
+        <input id="pattern" placeholder="myapp.com" aria-label="Site pattern">
+        <select id="policy" class="policy ask" aria-label="Policy"><option value="allow">Allow</option><option value="ask" selected>Ask</option><option value="deny">Deny</option></select>
+        <button class="button compact" id="addRule">Add</button>
+      </div>
+      <p class="field-hint">Sensitive actions still require explicit approval.</p>
+    </div>
+  </div>
+  <form id="pairing" hidden novalidate>
+    <h4>Connect your agent</h4>
+    <p class="small" style="margin-top:6px">Run <code>opchrm init</code> in your terminal, then paste the pairing token here.</p>
+    <label for="pair-token">Pairing token</label>
+    <input class="input mono" id="pair-token" type="password" autocomplete="off" spellcheck="false" placeholder="oc_…">
+    <p id="pair-error" class="field-error" hidden>Token should start with <code>oc_</code>.</p>
+    <button class="button primary" type="submit" id="pair-button">Connect agent</button>
+  </form>
 </div>
-
-<h2>Pending approvals</h2>
-<ul id="pending"></ul>
-
-<h2>Allowed sites</h2>
-<ul id="rules"></ul>
-<div class="addrow">
-  <input id="pattern" placeholder="myapp.com" aria-label="Site pattern">
-  <select id="policy" aria-label="Policy"><option value="allow">Allow</option><option value="ask">Ask</option><option value="deny">Deny</option></select>
-  <button id="addRule">Add</button>
-</div>
+<div class="popup-foot" role="status" aria-live="polite" id="feedback"><strong>You stay in control.</strong> <span id="feedback-text">Pause access at any time.</span></div>
 <script src="popup.js"></script>
 </body>
 </html>
